@@ -12,7 +12,7 @@ class ToDoTableViewController: UITableViewController, AddTodoTableViewDelegate, 
     
     let cellId = "cellId"
     
-    var isSelected = [[Int](), [Int](), [Int]()]
+    var isSelected = Array(repeating: Array(repeating: -1, count: 10), count: 3)
     
     private var priorityNumbers = ["High Priority", "Medium Priority", "Low Priority"]
     
@@ -55,17 +55,24 @@ class ToDoTableViewController: UITableViewController, AddTodoTableViewDelegate, 
     }
     
     @objc func deleteTodo(_ sender: UIBarButtonItem) {
-        if !isSelected[0].isEmpty {
-            highPriority.remove(elementsAtIndices: isSelected[0])
-            isSelected[0].removeAll()
-        }
-        if !isSelected[1].isEmpty {
-            mediuPriority.remove(elementsAtIndices: isSelected[1])
-            isSelected[1].removeAll()
-        }
-        if !isSelected[2].isEmpty {
-            lowPriority.remove(elementsAtIndices: isSelected[2])
-            isSelected[2].removeAll()
+        for i in 0..<3 {
+            for j in stride(from: isSelected[0].count - 1, through: 0, by: -1) {
+                if isSelected[i][j] == 0 {
+                    switch i {
+                    case 0:
+                        highPriority.remove(at: j)
+                        isSelected[i][j] = -1
+                    case 1:
+                        mediuPriority.remove(at: j)
+                        isSelected[i][j] = -1
+                    case 2:
+                        lowPriority.remove(at: j)
+                        isSelected[i][j] = -1
+                    default:
+                        fatalError()
+                    }
+                }
+            }
         }
         tableView.reloadData()
     }
@@ -181,30 +188,14 @@ class ToDoTableViewController: UITableViewController, AddTodoTableViewDelegate, 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
             cell.accessoryType = .checkmark
-            if indexPath.section == 0 {
-                isSelected[0].append(indexPath.row)
-            }
-            if indexPath.section == 1 {
-                isSelected[1].append(indexPath.row)
-            }
-            if indexPath.section == 2 {
-                isSelected[2].append(indexPath.row)
-            }
+            isSelected[indexPath.section][indexPath.row] = 0
         }
     }
     
     override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) {
             cell.accessoryType = .detailDisclosureButton
-            if indexPath.section == 0 {
-                isSelected[0].remove(at: indexPath.row)
-            }
-            if indexPath.section == 1 {
-                isSelected[1].remove(at: indexPath.row)
-            }
-            if indexPath.section == 2 {
-                isSelected[2].remove(at: indexPath.row)
-            }
+            isSelected[indexPath.section][indexPath.row] = -1
         }
     }
     
@@ -226,13 +217,5 @@ class ToDoTableViewController: UITableViewController, AddTodoTableViewDelegate, 
         editVC.indexPathRow = indexRow
         editVC.editDelegate = self
         self.navigationController?.pushViewController(editVC, animated: true)
-    }
-}
-
-extension Array {
-    mutating func remove(elementsAtIndices indicesToRemove: [Int]) {
-        for indexToRemove in indicesToRemove.sorted(by: >) {
-            remove(at: indexToRemove)
-        }
     }
 }
